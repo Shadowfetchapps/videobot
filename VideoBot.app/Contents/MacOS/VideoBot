@@ -1,10 +1,11 @@
 #!/bin/bash
-# VideoBot launcher — resolves the app bundle location and runs the Python app
+# VideoBot launcher
+# Finder strips the shell environment, so we resolve paths and inject
+# the user site-packages directory explicitly before importing anything.
 
-# Find the directory this .app lives in
 APP_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
 
-# Prefer Homebrew / pyenv Python if available, fall back to system Python 3
+# ── Find Python 3 ─────────────────────────────────────────────────────────────
 PYTHON=""
 for candidate in \
     /opt/homebrew/bin/python3 \
@@ -18,16 +19,22 @@ for candidate in \
 done
 
 if [ -z "$PYTHON" ]; then
-    osascript -e 'display alert "VideoBot" message "Python 3 not found. Please install Python 3 and run: pip3 install -r requirements.txt"'
+    osascript -e 'display alert "VideoBot" message "Python 3 not found.\n\nInstall Python from https://python.org and then run:\n\npip3 install -r requirements.txt\nplaywright install chromium"'
+    exit 1
+fi
+
+# ── Inject user site-packages so Finder-launched apps can find pip packages ──
+PYVER=$("$PYTHON" -c "import sys; v=sys.version_info; print(str(v.major)+'.'+str(v.minor))" 2>/dev/null)
+USER_SITE="$HOME/Library/Python/$PYVER/lib/python/site-packages"
+if [ -d "$USER_SITE" ]; then
+    export PYTHONPATH="$USER_SITE${PYTHONPATH:+:$PYTHONPATH}"
+fi
+
+# ── Sanity check ──────────────────────────────────────────────────────────────
+if ! "$PYTHON" -c "import PyQt6" 2>/dev/null; then
+    osascript -e "display alert \"VideoBot — Missing Dependencies\" message \"PyQt6 is not installed.\n\nOpen Terminal and run:\n\npip3 install -r $APP_DIR/requirements.txt\nplaywright install chromium\""
     exit 1
 fi
 
 cd "$APP_DIR"
-
-# Check that PyQt6 is importable
-if ! "$PYTHON" -c "import PyQt6" 2>/dev/null; then
-    osascript -e 'display alert "VideoBot — Missing Dependencies" message "PyQt6 is not installed.\n\nOpen Terminal and run:\n\npip3 install -r '"$APP_DIR"'/requirements.txt\nplaywright install chromium"'
-    exit 1
-fi
-
 exec "$PYTHON" "$APP_DIR/run.py"
