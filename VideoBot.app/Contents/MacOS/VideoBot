@@ -1,0 +1,33 @@
+#!/bin/bash
+# VideoBot launcher — resolves the app bundle location and runs the Python app
+
+# Find the directory this .app lives in
+APP_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
+
+# Prefer Homebrew / pyenv Python if available, fall back to system Python 3
+PYTHON=""
+for candidate in \
+    /opt/homebrew/bin/python3 \
+    /usr/local/bin/python3 \
+    "$HOME/.pyenv/shims/python3" \
+    /usr/bin/python3; do
+    if [ -x "$candidate" ]; then
+        PYTHON="$candidate"
+        break
+    fi
+done
+
+if [ -z "$PYTHON" ]; then
+    osascript -e 'display alert "VideoBot" message "Python 3 not found. Please install Python 3 and run: pip3 install -r requirements.txt"'
+    exit 1
+fi
+
+cd "$APP_DIR"
+
+# Check that PyQt6 is importable
+if ! "$PYTHON" -c "import PyQt6" 2>/dev/null; then
+    osascript -e 'display alert "VideoBot — Missing Dependencies" message "PyQt6 is not installed.\n\nOpen Terminal and run:\n\npip3 install -r '"$APP_DIR"'/requirements.txt\nplaywright install chromium"'
+    exit 1
+fi
+
+exec "$PYTHON" "$APP_DIR/run.py"
