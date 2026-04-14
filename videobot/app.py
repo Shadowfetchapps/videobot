@@ -356,7 +356,7 @@ class MainWindow(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
-    app.setFont(QFont("SF Pro Text", 13))
+    app.setFont(QFont(".AppleSystemUIFont", 13))
     win = MainWindow()
     win.show()
     sys.exit(app.exec())

@@ -1,16 +1,17 @@
 #!/bin/bash
 # VideoBot launcher
-# Finder strips the shell environment, so we resolve paths and inject
-# the user site-packages directory explicitly before importing anything.
+# Finder strips the shell environment, so we use the exact Python path
+# and PYTHONPATH is also set via LSEnvironment in Info.plist.
 
 APP_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
 
-# ── Find Python 3 ─────────────────────────────────────────────────────────────
+# ── Locate Python (most-specific to least-specific) ──────────────────────────
 PYTHON=""
 for candidate in \
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/python3" \
+    "/Library/Developer/CommandLineTools/usr/bin/python3" \
     /opt/homebrew/bin/python3 \
     /usr/local/bin/python3 \
-    "$HOME/.pyenv/shims/python3" \
     /usr/bin/python3; do
     if [ -x "$candidate" ]; then
         PYTHON="$candidate"
@@ -19,11 +20,11 @@ for candidate in \
 done
 
 if [ -z "$PYTHON" ]; then
-    osascript -e 'display alert "VideoBot" message "Python 3 not found.\n\nInstall Python from https://python.org and then run:\n\npip3 install -r requirements.txt\nplaywright install chromium"'
+    osascript -e 'display alert "VideoBot" message "Python 3 not found. Please install Python 3 and then run:\n\npip3 install -r requirements.txt\nplaywright install chromium"'
     exit 1
 fi
 
-# ── Inject user site-packages so Finder-launched apps can find pip packages ──
+# ── Inject user site-packages (Finder env has no PYTHONPATH) ─────────────────
 PYVER=$("$PYTHON" -c "import sys; v=sys.version_info; print(str(v.major)+'.'+str(v.minor))" 2>/dev/null)
 USER_SITE="$HOME/Library/Python/$PYVER/lib/python/site-packages"
 if [ -d "$USER_SITE" ]; then
@@ -32,7 +33,7 @@ fi
 
 # ── Sanity check ──────────────────────────────────────────────────────────────
 if ! "$PYTHON" -c "import PyQt6" 2>/dev/null; then
-    osascript -e "display alert \"VideoBot — Missing Dependencies\" message \"PyQt6 is not installed.\n\nOpen Terminal and run:\n\npip3 install -r $APP_DIR/requirements.txt\nplaywright install chromium\""
+    osascript -e "display alert \"VideoBot — Missing Dependencies\" message \"PyQt6 not found.\n\nOpen Terminal and run:\n\npip3 install -r $APP_DIR/requirements.txt\nplaywright install chromium\""
     exit 1
 fi
 
