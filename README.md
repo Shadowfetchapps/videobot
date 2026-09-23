@@ -48,6 +48,8 @@ python run.py
 
 ---
 
+`VideoBot.app` is the author's macOS launcher. It runs `run.py` from a fixed path on the author's Mac with Xcode's Python, so it will not work from a fresh clone. Use `python run.py` instead.
+
 ## Usage
 
 1. Paste a listing or gallery URL into **Start URL**
