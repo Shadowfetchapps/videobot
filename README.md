@@ -34,7 +34,8 @@ VideoBot crawls listing/gallery pages, follows each item to its detail page, dow
 ### Install
 
 ```bash
-cd /Volumes/NVME1TB/videobot
+git clone https://github.com/Shadowfetchapps/videobot.git
+cd videobot
 pip install -r requirements.txt
 playwright install chromium
 ```
@@ -147,4 +148,4 @@ videobot/
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
